@@ -1,0 +1,50 @@
+### Get all posts (with pagination)
+GET http://blog.test/api/posts?page=1
+Accept: application/json
+
+###
+
+### Create a new post
+POST http://blog.test/api/posts
+Content-Type: application/json
+Accept: application/json
+
+{
+    "user_id": "01jnec7m6mr26hfcnkznykh2qa",
+    "slug": "my-new-post",
+    "title": "My New Post",
+    "content": "This is the content of my new post.",
+    "is_publish": true,
+    "image": "https://example.com/path/to/new-image.jpg",
+    "tags": [
+        "01jnec7m83grg1cptyarbtr0w4",
+        "01jnec7m84y5k9nd2662cw8et9"
+    ]
+}
+
+###
+
+### Get a specific post
+GET http://blog.test/api/posts/01jnec7njz8asddk73g777j5zf
+Accept: application/json
+
+###
+
+### Update an existing post
+PUT http://blog.test/api/posts/01jnec7njz8asddk73g777j5zf
+Content-Type: application/json
+Accept: application/json
+
+{
+    "title": "Updated Post Title",
+    "content": "This is the updated content.",
+    "is_publish": false
+}
+
+###
+
+### Delete a post
+DELETE http://blog.test/api/posts/01jnec7njz8asddk73g777j5zf
+Accept: application/json
+
+###
