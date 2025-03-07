@@ -16,7 +16,7 @@ class StorePostRequest extends FormRequest
     {
         return [
             'user_id' => 'required|ulid|exists:users,id', // Перевірка, що user_id існує в таблиці users
-            'slug' => 'required|string|max:255|unique:posts,slug', // Унікальний slug
+            'slug' => 'sometimes|string|max:255|unique:posts,slug', // Унікальний slug
             'title' => 'required|string|max:128', // Максимум 128 символів
             'content' => 'required|string', // Текст без обмеження довжини
             'is_publish' => 'boolean', // Лише true/false

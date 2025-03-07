@@ -4,56 +4,89 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use App\Http\Resources\PostResource;
 use App\Models\Post;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class PostController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
-        // TODO: виправити те, що автор пустий :)
-        $posts = Post::with('tags', 'author')
-            ->withCount('comments', 'likes')
+        $posts = Post::with(['author', 'tags'])
             ->latest()
             ->paginate(10);
-        return response()->json(PostResource::collection($posts));
+        return view('posts.index', compact('posts'));
     }
 
-    public function store(StorePostRequest $request): JsonResponse
+    public function create(): View
     {
-        $post = Post::create($request->except('tags'));
+        return view('posts.create');
+    }
 
-        if ($request->has('tags')) {
-            $post->tags()->attach($request->input('tags'));
+    public function store(StorePostRequest $request)
+    {
+        $validated = $request->validated();
+
+        $post = new Post();
+        $post->user_id = $validated['user_id'];
+        $post->title = $validated['title'];
+        $post->content = $validated['content'];
+        $post->slug = $validated['slug'] ?? Str::slug($validated['title']);
+        $post->is_publish = $validated['is_publish'] ?? false;
+        $post->image = $validated['image'] ?? null;
+        $post->save();
+
+        if (isset($validated['tags'])) {
+            $post->tags()->sync($validated['tags']);
         }
 
-        return response()->json(new PostResource($post->load('tags')), 201);
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Пост успішно створено!');
     }
 
-    public function show(Post $post): JsonResponse
+    public function show(Post $post): View
     {
-        // TODO: виправити те, що автор пустий :)
-        $resource = $post->load('tags', 'author')->loadCount(['comments', 'likes']);
-        return response()->json(new PostResource($resource), 200);
+        $post->load(['author', 'tags', 'comments', 'likes']);
+        return view('posts.show', compact('post'));
     }
 
-    public function update(UpdatePostRequest $request, Post $post): JsonResponse
+    public function edit(Post $post): View
     {
-        $post->update($request->except('tags'));
+        $post->load('tags');
+        return view('posts.edit', compact('post'));
+    }
 
-        if ($request->has('tags')) {
-            $post->tags()->sync($request->input('tags'));
+    public function update(UpdatePostRequest $request, Post $post): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $post->update([
+            'user_id' => $validated['user_id'] ?? $post->user_id,
+            'title' => $validated['title'] ?? $post->title,
+            'content' => $validated['content'] ?? $post->content,
+            'slug' => $validated['slug'] ?? Str::slug($validated['title'] ?? $post->title),
+            'is_publish' => $validated['is_publish'] ?? $post->is_publish,
+            'image' => $validated['image'] ?? $post->image,
+        ]);
+
+        if (isset($validated['tags'])) {
+            $post->tags()->sync($validated['tags']);
         }
 
-        return response()->json(new PostResource($post->load('tags')), 200);
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Пост успішно оновлено!');
     }
 
-    public function destroy(Post $post): JsonResponse
+    public function destroy(Post $post): RedirectResponse
     {
-        $post->tags()->detach();
+        $post->tags()->detach(); // Видаляємо зв’язки з тегами
         $post->delete();
 
-        return response()->json(null, 204);
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Пост успішно видалено!');
     }
 }
