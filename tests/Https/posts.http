@@ -10,15 +10,15 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "user_id": "01jnec7m6mr26hfcnkznykh2qa",
-    "slug": "my-new-post",
-    "title": "My New Post",
-    "content": "This is the content of my new post.",
+    "user_id": "01jp0h8babq35nw8bvwmdbc551",
+    "slug": "itstep-post4",
+    "title": "itstep post laravel notifications4",
+    "content": "This is the content of my new post4. Нотифікації в Ларавель працюють.",
     "is_publish": true,
     "image": "https://example.com/path/to/new-image.jpg",
     "tags": [
-        "01jnec7m83grg1cptyarbtr0w4",
-        "01jnec7m84y5k9nd2662cw8et9"
+        "01jp0h8bbm64sc6zfjks704tsr",
+        "01jp0h8bbn1707hbsz26ra7wb3"
     ]
 }
 
@@ -44,7 +44,14 @@ Accept: application/json
 ###
 
 ### Delete a post
-DELETE http://blog.test/api/posts/01jnec7njz8asddk73g777j5zf
+DELETE http://blog.test/api/posts/magni-et-voluptate-ducimus-et-ullam
+Accept: application/json
+
+###
+
+### Publish post
+PUT http://blog.test/api/posts/tempora-dicta-quo-cum-in-voluptatem/publish
+Content-Type: application/json
 Accept: application/json
 
 ###

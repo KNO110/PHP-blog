@@ -19,6 +19,7 @@ class User extends Authenticatable
     use HasFactory;
     use Notifiable;
     use HasUlids;
+    use Notifiable;
 
     protected $hidden = [
         'password',

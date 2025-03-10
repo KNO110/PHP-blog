@@ -15,3 +15,5 @@ Route::apiResource('tags', TagController::class);
 Route::apiResource('posts', PostController::class);
 Route::apiResource('comments', CommentController::class);
 Route::apiResource('likes', LikeController::class);
+
+Route::put('/posts/{post}/publish', [PostController::class, 'publish']);

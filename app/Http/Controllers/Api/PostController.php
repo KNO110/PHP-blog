@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\PostPublished;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use App\Models\User;
+use App\Notifications\NewPostNotification;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
@@ -29,6 +33,12 @@ class PostController extends Controller
             $post->tags()->attach($request->input('tags'));
         }
 
+        // Відправляємо нотифікацію всім користувачам
+        $users = User::query()->limit(2)->get();
+        foreach ($users as $user) {
+            $user->notify(new NewPostNotification($post));
+        }
+
         return response()->json(new PostResource($post->load('tags')), 201);
     }
 
@@ -46,6 +56,18 @@ class PostController extends Controller
         if ($request->has('tags')) {
             $post->tags()->sync($request->input('tags'));
         }
+
+        return response()->json(new PostResource($post->load('tags')), 200);
+    }
+
+    public function publish(Request $request, Post $post): JsonResponse
+    {
+        $post->update([
+            'is_publish' => true
+        ]);
+
+        //PostPublished::dispatch($post, "insider.smidt@gmail.com");
+        event(new PostPublished($post, "insider.smidt@gmail.com"));
 
         return response()->json(new PostResource($post->load('tags')), 200);
     }
