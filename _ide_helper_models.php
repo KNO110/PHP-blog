@@ -76,11 +76,11 @@ namespace App\Models{
  * @property string $slug
  * @property string $title
  * @property string $content
- * @property int $is_publish
+ * @property bool $is_publish
  * @property string|null $image
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User|null $author
+ * @property-read \App\Models\User $author
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Like> $likes

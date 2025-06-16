@@ -15,13 +15,40 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        // TODO: виправити те, що автор пустий :)
-        $posts = Post::with('tags', 'author')
-            ->withCount('comments', 'likes')
-            ->latest()
-            ->paginate(10);
+        $query = Post::query();
+
+        if ($search = $request->input('search')) {
+            $query->where(fn($q) =>
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%")
+            );
+        }
+
+        if (!is_null($request->input('published'))) {
+            $query->where('is_publish', (bool)$request->input('published'));
+        }
+
+        if ($author = $request->input('author')) {
+            $query->where('user_id', $author);
+        }
+
+        if ($sort = $request->input('sort')) {
+            $dir   = str_starts_with($sort, '-') ? 'desc' : 'asc';
+            $field = ltrim($sort, '-');
+            if (in_array($field, ['title', 'created_at'])) {
+                $query->orderBy($field, $dir);
+            }
+        }
+
+        $query->with(['tags', 'author'])
+              ->withCount(['comments', 'likes']);
+
+        $posts = $query
+            ->paginate(10)
+            ->appends($request->query());
+
         return response()->json(PostResource::collection($posts));
     }
 
@@ -33,20 +60,18 @@ class PostController extends Controller
             $post->tags()->attach($request->input('tags'));
         }
 
-        // Відправляємо нотифікацію всім користувачам
-        $users = User::query()->limit(2)->get();
-        foreach ($users as $user) {
-            $user->notify(new NewPostNotification($post));
-        }
+        User::limit(2)->get()
+            ->each(fn(User $u) => $u->notify(new NewPostNotification($post)));
 
         return response()->json(new PostResource($post->load('tags')), 201);
     }
 
     public function show(Post $post): JsonResponse
     {
-        // TODO: виправити те, що автор пустий :)
-        $resource = $post->load('tags', 'author')->loadCount(['comments', 'likes']);
-        return response()->json(new PostResource($resource), 200);
+        $post->load(['tags', 'author'])
+             ->loadCount(['comments', 'likes']);
+
+        return response()->json(new PostResource($post), 200);
     }
 
     public function update(UpdatePostRequest $request, Post $post): JsonResponse
@@ -62,11 +87,8 @@ class PostController extends Controller
 
     public function publish(Request $request, Post $post): JsonResponse
     {
-        $post->update([
-            'is_publish' => true
-        ]);
+        $post->update(['is_publish' => true]);
 
-        //PostPublished::dispatch($post, "insider.smidt@gmail.com");
         event(new PostPublished($post, "insider.smidt@gmail.com"));
 
         return response()->json(new PostResource($post->load('tags')), 200);
